@@ -3,18 +3,25 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E271D71DA258E44AA9E7B2B /* Pods_fuckin_acceleration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B39907A19B44096DCE72671A /* Pods_fuckin_acceleration.framework */; };
+		F3DC961123A1CF7800179717 /* ParticleFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DC961023A1CF7800179717 /* ParticleFilter.swift */; };
 		F3E8477B23798CB600DAF4CB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E8477A23798CB600DAF4CB /* AppDelegate.swift */; };
 		F3E8477D23798CB600DAF4CB /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E8477C23798CB600DAF4CB /* ViewController.swift */; };
 		F3E8478023798CB600DAF4CB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F3E8477E23798CB600DAF4CB /* Main.storyboard */; };
 		F3E8478223798CB700DAF4CB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F3E8478123798CB700DAF4CB /* Assets.xcassets */; };
 		F3E8478523798CB700DAF4CB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F3E8478323798CB700DAF4CB /* LaunchScreen.storyboard */; };
+		F3E8478E23798CC700DAF4CB /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3E8478D23798CC700DAF4CB /* CoreMotion.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		35919BAC24B686C57B8BE2C7 /* Pods-fuckin_acceleration.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-fuckin_acceleration.release.xcconfig"; path = "Target Support Files/Pods-fuckin_acceleration/Pods-fuckin_acceleration.release.xcconfig"; sourceTree = "<group>"; };
+		A9F4BCE9B246F3929D7179AF /* Pods-fuckin_acceleration.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-fuckin_acceleration.debug.xcconfig"; path = "Target Support Files/Pods-fuckin_acceleration/Pods-fuckin_acceleration.debug.xcconfig"; sourceTree = "<group>"; };
+		B39907A19B44096DCE72671A /* Pods_fuckin_acceleration.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_fuckin_acceleration.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F3DC961023A1CF7800179717 /* ParticleFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticleFilter.swift; sourceTree = "<group>"; };
 		F3E8477723798CB600DAF4CB /* fuckin_acceleration.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = fuckin_acceleration.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F3E8477A23798CB600DAF4CB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F3E8477C23798CB600DAF4CB /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -22,6 +29,7 @@
 		F3E8478123798CB700DAF4CB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F3E8478423798CB700DAF4CB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F3E8478623798CB700DAF4CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F3E8478D23798CC700DAF4CB /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,17 +37,30 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3E8478E23798CC700DAF4CB /* CoreMotion.framework in Frameworks */,
+				5E271D71DA258E44AA9E7B2B /* Pods_fuckin_acceleration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9B1C201AD934E821F2EAB729 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				A9F4BCE9B246F3929D7179AF /* Pods-fuckin_acceleration.debug.xcconfig */,
+				35919BAC24B686C57B8BE2C7 /* Pods-fuckin_acceleration.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		F3E8476E23798CB600DAF4CB = {
 			isa = PBXGroup;
 			children = (
 				F3E8477923798CB600DAF4CB /* fuckin_acceleration */,
 				F3E8477823798CB600DAF4CB /* Products */,
+				F3E8478C23798CC700DAF4CB /* Frameworks */,
+				9B1C201AD934E821F2EAB729 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -56,12 +77,22 @@
 			children = (
 				F3E8477A23798CB600DAF4CB /* AppDelegate.swift */,
 				F3E8477C23798CB600DAF4CB /* ViewController.swift */,
+				F3DC961023A1CF7800179717 /* ParticleFilter.swift */,
 				F3E8477E23798CB600DAF4CB /* Main.storyboard */,
 				F3E8478123798CB700DAF4CB /* Assets.xcassets */,
 				F3E8478323798CB700DAF4CB /* LaunchScreen.storyboard */,
 				F3E8478623798CB700DAF4CB /* Info.plist */,
 			);
 			path = fuckin_acceleration;
+			sourceTree = "<group>";
+		};
+		F3E8478C23798CC700DAF4CB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F3E8478D23798CC700DAF4CB /* CoreMotion.framework */,
+				B39907A19B44096DCE72671A /* Pods_fuckin_acceleration.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -71,9 +102,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F3E8478923798CB700DAF4CB /* Build configuration list for PBXNativeTarget "fuckin_acceleration" */;
 			buildPhases = (
+				FF20F738B46F30CA5E9259AF /* [CP] Check Pods Manifest.lock */,
 				F3E8477323798CB600DAF4CB /* Sources */,
 				F3E8477423798CB600DAF4CB /* Frameworks */,
 				F3E8477523798CB600DAF4CB /* Resources */,
+				D7B05E81179B83237947BEF8 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -130,12 +163,55 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		D7B05E81179B83237947BEF8 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-fuckin_acceleration/Pods-fuckin_acceleration-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-fuckin_acceleration/Pods-fuckin_acceleration-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-fuckin_acceleration/Pods-fuckin_acceleration-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		FF20F738B46F30CA5E9259AF /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-fuckin_acceleration-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		F3E8477323798CB600DAF4CB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				F3E8477D23798CB600DAF4CB /* ViewController.swift in Sources */,
+				F3DC961123A1CF7800179717 /* ParticleFilter.swift in Sources */,
 				F3E8477B23798CB600DAF4CB /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -280,6 +356,7 @@
 		};
 		F3E8478A23798CB700DAF4CB /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A9F4BCE9B246F3929D7179AF /* Pods-fuckin_acceleration.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
@@ -298,6 +375,7 @@
 		};
 		F3E8478B23798CB700DAF4CB /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 35919BAC24B686C57B8BE2C7 /* Pods-fuckin_acceleration.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
