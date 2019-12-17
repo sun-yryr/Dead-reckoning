@@ -18,7 +18,6 @@ private class CubicLineSampleFillFormatter: IFillFormatter {
 
 class ViewController: UIViewController, ChartViewDelegate {
     let motion = CMMotionManager()
-    var timer: Timer?
     @IBOutlet weak var zAccLabel: UILabel!
     @IBOutlet weak var lineChartView: LineChartView!
     @IBOutlet weak var startButton: UIButton!
@@ -34,6 +33,8 @@ class ViewController: UIViewController, ChartViewDelegate {
     let fm = FileManager.default
     let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     var PF = ParticleFilter(particleCount: 100, alpha: 0, sigma: 0.001)
+    var prevCMAcceleration: CMAcceleration = CMAcceleration()
+    var prevTimestamp = 0.0
     
     
     override func viewDidLoad() {
@@ -111,6 +112,8 @@ class ViewController: UIViewController, ChartViewDelegate {
                 let nowWorldTime = NSDate().timeIntervalSince1970
                 guard let deviceMotion = CMDeviceMotion else { return }
                 //print(deviceMotion.timestamp)
+                let durTime = deviceMotion.timestamp - self.prevTimestamp
+                self.prevTimestamp = deviceMotion.timestamp
                 // RotationMatrix の取得
                 // [m11, m12, m13, m21, m22, m23, m31, m32, m33]
                 let rm = deviceMotion.attitude.rotationMatrix
@@ -132,7 +135,8 @@ class ViewController: UIViewController, ChartViewDelegate {
                 
                 DispatchQueue.init(label: "DR").async {
                     let worldAcc = self.convertUserAccToWorldAxes(userAcc: userAcc, rotationMatrix: rm)
-                    let PFOutput = self.PF.run(input: worldAcc)
+                    let worldSpeed = self.convertAccToSpeed(Acc: worldAcc, durTime: durTime)
+                    let PFOutput = self.PF.run(input: worldAcc, input: worldSpeed)
                     let writeString = "\(nowWorldTime)," + PFOutput.map(){ String($0) }.joined(separator: ",") + "\n"
                     self.writeFile(fileUrl: self.DRFileURL, writeString: writeString)
                 }
@@ -193,9 +197,6 @@ class ViewController: UIViewController, ChartViewDelegate {
     }
     
     @IBAction func stopRecord(_ sender: Any) {
-        if self.timer!.isValid {
-            self.timer!.invalidate()
-        }
         self.motion.stopDeviceMotionUpdates()
         self.motion.stopMagnetometerUpdates()
         self.startButton.isHidden = false
@@ -226,27 +227,27 @@ class ViewController: UIViewController, ChartViewDelegate {
         
         if androidSwitch.isOn {
             data.components(separatedBy: "\n").forEach { (rowString) in
-                let csvItems = rowString.components(separatedBy: ",").map({ Double($0) })
-                guard csvItems.count == 22 else { return }
-                guard let m11 = csvItems[1],
-                    let m12 = csvItems[2],
-                    let m13 = csvItems[3],
-                    let m21 = csvItems[4],
-                    let m22 = csvItems[5],
-                    let m23 = csvItems[6],
-                    let m31 = csvItems[7],
-                    let m32 = csvItems[8],
-                    let m33 = csvItems[9] else { return }
-                // 以後nilは存在しない
-                let userAcc = CMAcceleration(x: csvItems[10]!, y: csvItems[11]!, z: csvItems[12]!)
+//                let csvItems = rowString.components(separatedBy: ",").map({ Double($0) })
+//                guard csvItems.count == 22 else { return }
+//                guard let m11 = csvItems[1],
+//                    let m12 = csvItems[2],
+//                    let m13 = csvItems[3],
+//                    let m21 = csvItems[4],
+//                    let m22 = csvItems[5],
+//                    let m23 = csvItems[6],
+//                    let m31 = csvItems[7],
+//                    let m32 = csvItems[8],
+//                    let m33 = csvItems[9] else { return }
+//                // 以後nilは存在しない
+//                let userAcc = CMAcceleration(x: csvItems[10]!, y: csvItems[11]!, z: csvItems[12]!)
 //                let gravity = CMAcceleration(x: csvItems[13]!, y: csvItems[14]!, z: csvItems[15]!)
 //                let gyro = CMRotationRate(x: csvItems[16]!, y: csvItems[17]!, z: csvItems[18]!)
 //                let magnetic = CMMagneticField(x: csvItems[19]!, y: csvItems[20]!, z: csvItems[21]!)
-                let rotationMatrix = CMRotationMatrix([m11, m12, m13, m21, m22, m23, m31, m32, m33])!
-                // 端末座標軸 -> 世界座標軸
-                let worldAcc = convertUserAccToWorldAxes(userAcc: userAcc, rotationMatrix: rotationMatrix)
-                // DRをする
-                self.PF.run(input: worldAcc)
+//                let rotationMatrix = CMRotationMatrix([m11, m12, m13, m21, m22, m23, m31, m32, m33])!
+//                // 端末座標軸 -> 世界座標軸
+//                let worldAcc = convertUserAccToWorldAxes(userAcc: userAcc, rotationMatrix: rotationMatrix)
+//                // DRをする
+//                self.PF.run(input: worldAcc, input: )
             }
         } else {
             data.components(separatedBy: "\n").forEach { (rowString) in
@@ -269,8 +270,12 @@ class ViewController: UIViewController, ChartViewDelegate {
                 let rotationMatrix = CMRotationMatrix([m11, m12, m13, m21, m22, m23, m31, m32, m33])!
                 // 端末座標軸 -> 世界座標軸
                 let worldAcc = convertUserAccToWorldAxes(userAcc: userAcc, rotationMatrix: rotationMatrix)
+                // 加速度 -> 速度
+                let durTime = csvItems[0]! - self.prevTimestamp
+                self.prevTimestamp = csvItems[0]!
+                let worldSpeed = self.convertAccToSpeed(Acc: worldAcc, durTime: durTime)
                 // DRをする
-                let PFOutput = PF.run(input: worldAcc)
+                let PFOutput = PF.run(input: worldAcc, input: worldSpeed)
                 let writeData = String(csvItems[0]!) + "," + PFOutput.map(){ String($0) }.joined(separator: ",") + "\n"
                 writeFile(fileUrl: outputFileUrl, writeString: writeData)
             }
@@ -310,6 +315,15 @@ class ViewController: UIViewController, ChartViewDelegate {
             worldAcc[i/3] += multipleColumn[i]
         }
         return CMAcceleration(x: worldAcc[0], y: worldAcc[1], z: worldAcc[2])
+    }
+    
+    func convertAccToSpeed(Acc: CMAcceleration, durTime: Double) -> [Double] {
+        var speed = [0.0, 0.0, 0.0]
+        speed[0] = (Acc.x + self.prevCMAcceleration.x) * durTime / 2.0
+        speed[1] = (Acc.y + self.prevCMAcceleration.y) * durTime / 2.0
+        speed[2] = (Acc.z + self.prevCMAcceleration.z) * durTime / 2.0
+        self.prevCMAcceleration = Acc
+        return speed
     }
 }
 
