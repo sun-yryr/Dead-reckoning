@@ -112,8 +112,7 @@ class ViewController: UIViewController, ChartViewDelegate {
                 //print(deviceMotion.timestamp)
                 // RotationMatrix の取得
                 // [m11, m12, m13, m21, m22, m23, m31, m32, m33]
-                let rm = deviceMotion.attitude.rotationMatrix
-                let rotationMatrix = [rm.m11, rm.m12, rm.m13, rm.m21, rm.m22, rm.m23, rm.m31, rm.m32, rm.m33]
+                let rotationMatrix = deviceMotion.attitude.rotationMatrix.toArray()
                 // ユーザー加速度の取得 [G]
                 let userAcc = deviceMotion.userAcceleration
                 // 重力加速度の取得 [G]
@@ -129,19 +128,6 @@ class ViewController: UIViewController, ChartViewDelegate {
                     self.writeFile(time: nowWorldTime, RM: rotationMatrix, userAcc: userAcc, gravity: gravity, gyroscope: gyroscope, magnetic: magnetic)
                 }
             }
-            
-            self.timer = Timer(fire: Date(), interval: 1.0/Double(Hz), repeats: true, block: { (_) in
-                // グラフ描画
-                if self.xAcc.count == (Hz) {
-                    let tmp_zAcc = self.zAcc
-                    DispatchQueue.main.async {
-                        self.lineChartView.data = self.generateLineData(vals: tmp_zAcc)
-                    }
-                    self.xAcc.removeAll()
-                    self.yAcc.removeAll()
-                    self.zAcc.removeAll()
-                }
-            })
         }
     }
     
@@ -288,8 +274,12 @@ class ViewController: UIViewController, ChartViewDelegate {
                 return 0.0
             }
         }
-        
-        return userAcc
+        // 足す
+        var worldAcc = [0.0, 0.0, 0.0]
+        for i in multipleColumn.indices {
+            worldAcc[i/3] += multipleColumn[i]
+        }
+        return CMAcceleration(x: worldAcc[0], y: worldAcc[1], z: worldAcc[2])
     }
 }
 
