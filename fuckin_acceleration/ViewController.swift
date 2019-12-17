@@ -21,18 +21,19 @@ class ViewController: UIViewController, ChartViewDelegate {
     var timer: Timer?
     @IBOutlet weak var zAccLabel: UILabel!
     @IBOutlet weak var lineChartView: LineChartView!
-    
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var stopButton: UIButton!
-    var fileName = "test4.txt"
     @IBOutlet weak var fileNameField: UITextField!
     @IBOutlet weak var readFileNameField: UITextField!
     @IBOutlet weak var readFileButton: UIButton!
     @IBOutlet weak var androidSwitch: UISwitch!
     
+    var fileName = "test4.txt"
+    var DRFileURL: URL!
     
     let fm = FileManager.default
     let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    var PF = ParticleFilter(particleCount: 100, alpha: 0, sigma: 0.001)
     
     
     override func viewDidLoad() {
@@ -112,7 +113,8 @@ class ViewController: UIViewController, ChartViewDelegate {
                 //print(deviceMotion.timestamp)
                 // RotationMatrix の取得
                 // [m11, m12, m13, m21, m22, m23, m31, m32, m33]
-                let rotationMatrix = deviceMotion.attitude.rotationMatrix.toArray()
+                let rm = deviceMotion.attitude.rotationMatrix
+                let rotationMatrix = rm.toArray()
                 // ユーザー加速度の取得 [G]
                 let userAcc = deviceMotion.userAcceleration
                 // 重力加速度の取得 [G]
@@ -126,6 +128,13 @@ class ViewController: UIViewController, ChartViewDelegate {
                 // 別で開く
                 DispatchQueue.init(label: "fileWrite").async {
                     self.writeFile(time: nowWorldTime, RM: rotationMatrix, userAcc: userAcc, gravity: gravity, gyroscope: gyroscope, magnetic: magnetic)
+                }
+                
+                DispatchQueue.init(label: "DR").async {
+                    let worldAcc = self.convertUserAccToWorldAxes(userAcc: userAcc, rotationMatrix: rm)
+                    let PFOutput = self.PF.run(input: worldAcc)
+                    let writeString = "\(nowWorldTime)," + PFOutput.map(){ String($0) }.joined(separator: ",") + "\n"
+                    self.writeFile(fileUrl: self.DRFileURL, writeString: writeString)
                 }
             }
         }
@@ -150,6 +159,21 @@ class ViewController: UIViewController, ChartViewDelegate {
         }
     }
     
+    func writeFile(fileUrl: URL, writeString: String) {
+        let fm = FileManager.default
+        let documentsUrl = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileUrl = documentsUrl.appendingPathComponent(self.fileName)
+        if fm.fileExists(atPath: fileUrl.path) {
+            if let fileHandle = FileHandle(forWritingAtPath: fileUrl.path) {
+                fileHandle.seekToEndOfFile()
+                // let data = "test append2 write data!".data(using: .utf8)!
+                // データ書き込み
+                fileHandle.write(writeString.data(using: .utf8)!)
+                fileHandle.closeFile()
+            }
+        }
+    }
+    
     @IBAction func startRecord(_ sender: Any) {
         self.fileName = self.fileNameField.text!
         let fileUrl = documentsUrl.appendingPathComponent(self.fileName)
@@ -157,6 +181,9 @@ class ViewController: UIViewController, ChartViewDelegate {
             let data = "timestamp,rm_m11,rm_m12,rm_m13,rm_m21,rm_m22,rm_m23,rm_m31,rm_m32,rm_m33,userAcc_x,userAcc_y,userAcc_z,gravity_x,gravity_y,gravity_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z\n".data(using: .utf8)!
             try! data.write(to: fileUrl)
         }
+        // DRのcreateもする
+        self.DRFileURL = self.createDROutputFile(fileName: self.fileName)
+        
         self.startButton.isHidden = true
         self.fileNameField.isHidden = true
         self.stopButton.isHidden = false
@@ -193,9 +220,9 @@ class ViewController: UIViewController, ChartViewDelegate {
         self.readFileButton.isHidden = true
         
         // 書き込みファイルの作成
-        self.createDROutputFile(fileName: fileName)
+        let outputFileUrl = self.createDROutputFile(fileName: fileName)
         // ファイルの読み込みとDR準備
-        let PF = ParticleFilter(particleCount: 100, alpha: 0, sigma: 0.001)
+        self.PF = ParticleFilter(particleCount: 100, alpha: 0, sigma: 0.001)
         
         if androidSwitch.isOn {
             data.components(separatedBy: "\n").forEach { (rowString) in
@@ -212,14 +239,14 @@ class ViewController: UIViewController, ChartViewDelegate {
                     let m33 = csvItems[9] else { return }
                 // 以後nilは存在しない
                 let userAcc = CMAcceleration(x: csvItems[10]!, y: csvItems[11]!, z: csvItems[12]!)
-                let gravity = CMAcceleration(x: csvItems[13]!, y: csvItems[14]!, z: csvItems[15]!)
-                let gyro = CMRotationRate(x: csvItems[16]!, y: csvItems[17]!, z: csvItems[18]!)
-                let magnetic = CMMagneticField(x: csvItems[19]!, y: csvItems[20]!, z: csvItems[21]!)
+//                let gravity = CMAcceleration(x: csvItems[13]!, y: csvItems[14]!, z: csvItems[15]!)
+//                let gyro = CMRotationRate(x: csvItems[16]!, y: csvItems[17]!, z: csvItems[18]!)
+//                let magnetic = CMMagneticField(x: csvItems[19]!, y: csvItems[20]!, z: csvItems[21]!)
                 let rotationMatrix = CMRotationMatrix([m11, m12, m13, m21, m22, m23, m31, m32, m33])!
                 // 端末座標軸 -> 世界座標軸
                 let worldAcc = convertUserAccToWorldAxes(userAcc: userAcc, rotationMatrix: rotationMatrix)
                 // DRをする
-                PF.run(input: worldAcc)
+                self.PF.run(input: worldAcc)
             }
         } else {
             data.components(separatedBy: "\n").forEach { (rowString) in
@@ -236,14 +263,16 @@ class ViewController: UIViewController, ChartViewDelegate {
                     let m33 = csvItems[9] else { return }
                 // 以後nilは存在しない
                 let userAcc = CMAcceleration(x: csvItems[10]!, y: csvItems[11]!, z: csvItems[12]!)
-                let gravity = CMAcceleration(x: csvItems[13]!, y: csvItems[14]!, z: csvItems[15]!)
-                let gyro = CMRotationRate(x: csvItems[16]!, y: csvItems[17]!, z: csvItems[18]!)
-                let magnetic = CMMagneticField(x: csvItems[19]!, y: csvItems[20]!, z: csvItems[21]!)
+//                let gravity = CMAcceleration(x: csvItems[13]!, y: csvItems[14]!, z: csvItems[15]!)
+//                let gyro = CMRotationRate(x: csvItems[16]!, y: csvItems[17]!, z: csvItems[18]!)
+//                let magnetic = CMMagneticField(x: csvItems[19]!, y: csvItems[20]!, z: csvItems[21]!)
                 let rotationMatrix = CMRotationMatrix([m11, m12, m13, m21, m22, m23, m31, m32, m33])!
                 // 端末座標軸 -> 世界座標軸
                 let worldAcc = convertUserAccToWorldAxes(userAcc: userAcc, rotationMatrix: rotationMatrix)
                 // DRをする
-                PF.run(input: worldAcc)
+                let PFOutput = PF.run(input: worldAcc)
+                let writeData = String(csvItems[0]!) + "," + PFOutput.map(){ String($0) }.joined(separator: ",") + "\n"
+                writeFile(fileUrl: outputFileUrl, writeString: writeData)
             }
         }
         self.startButton.isHidden = false
@@ -251,14 +280,15 @@ class ViewController: UIViewController, ChartViewDelegate {
         self.readFileButton.isHidden = false
     }
     
-    func createDROutputFile(fileName: String) {
+    func createDROutputFile(fileName: String) -> URL {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "mm-dd_HH:mm"
         let fileName = "DR_\(dateFormatter.string(from: Date()))_\(fileName)"
         let fileUrl = documentsUrl.appendingPathComponent(fileName)
 
-        let data = "DR_speed_x,DR_speed_y,DR_speed_z,DR_acc_x,DR_acc_y,DR_acc_z\n".data(using: .utf8)!
+        let data = "TimeStamp,DR_speed_x,DR_speed_y,DR_speed_z,DR_acc_x,DR_acc_y,DR_acc_z\n".data(using: .utf8)!
         try! data.write(to: fileUrl)
+        return fileUrl
     }
     
     func convertUserAccToWorldAxes(userAcc: CMAcceleration, rotationMatrix: CMRotationMatrix) -> CMAcceleration {
