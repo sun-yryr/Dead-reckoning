@@ -25,8 +25,8 @@ class ParticleFilter {
     }
     
     // 6次元の出力が来る
-    public func run(input: CMAcceleration) -> [Double] {
-        let input = [input.x, input.y, input.z]
+    public func run(input Acc: CMAcceleration, input Speed: [Double]) -> [Double] {
+        let input = Speed + [Acc.x, Acc.y, Acc.z]
         let x = move_particles(particles: self.xResampled)
         self.likehoodsNormed = calurate_likelihood(particles: x, measuredPoint: input)
         resampling(particles: x, likelihoods: self.likehoodsNormed)
