@@ -27,7 +27,7 @@ class ViewController: UIViewController, ChartViewDelegate {
     @IBOutlet weak var readFileButton: UIButton!
     @IBOutlet weak var androidSwitch: UISwitch!
     
-    var fileName = "test4.txt"
+    var RecordFileURL: URL!
     var DRFileURL: URL!
     
     let fm = FileManager.default
@@ -145,11 +145,8 @@ class ViewController: UIViewController, ChartViewDelegate {
     }
     
     func writeFile(time: TimeInterval, RM: [Double], userAcc: CMAcceleration, gravity: CMAcceleration, gyroscope: CMRotationRate, magnetic: CMMagneticField) {
-        let fm = FileManager.default
-        let documentsUrl = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileUrl = documentsUrl.appendingPathComponent(self.fileName)
-        if fm.fileExists(atPath: fileUrl.path) {
-            if let fileHandle = FileHandle(forWritingAtPath: fileUrl.path) {
+        if fm.fileExists(atPath: self.RecordFileURL.path) {
+            if let fileHandle = FileHandle(forWritingAtPath: self.RecordFileURL.path) {
                 fileHandle.seekToEndOfFile()
                 // let data = "test append2 write data!".data(using: .utf8)!
                 var writeString = "\(time),"
@@ -164,9 +161,6 @@ class ViewController: UIViewController, ChartViewDelegate {
     }
     
     func writeFile(fileUrl: URL, writeString: String) {
-        let fm = FileManager.default
-        let documentsUrl = fm.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileUrl = documentsUrl.appendingPathComponent(self.fileName)
         if fm.fileExists(atPath: fileUrl.path) {
             if let fileHandle = FileHandle(forWritingAtPath: fileUrl.path) {
                 fileHandle.seekToEndOfFile()
@@ -179,14 +173,15 @@ class ViewController: UIViewController, ChartViewDelegate {
     }
     
     @IBAction func startRecord(_ sender: Any) {
-        self.fileName = self.fileNameField.text!
-        let fileUrl = documentsUrl.appendingPathComponent(self.fileName)
+        let fileName = self.fileNameField.text!
+        let fileUrl = documentsUrl.appendingPathComponent(fileName)
+        self.RecordFileURL = fileUrl
         if !fm.fileExists(atPath: fileUrl.path) {
             let data = "timestamp,rm_m11,rm_m12,rm_m13,rm_m21,rm_m22,rm_m23,rm_m31,rm_m32,rm_m33,userAcc_x,userAcc_y,userAcc_z,gravity_x,gravity_y,gravity_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z\n".data(using: .utf8)!
             try! data.write(to: fileUrl)
         }
         // DRのcreateもする
-        self.DRFileURL = self.createDROutputFile(fileName: self.fileName)
+        self.DRFileURL = self.createDROutputFile(fileName: fileName)
         
         self.startButton.isHidden = true
         self.fileNameField.isHidden = true
@@ -287,7 +282,7 @@ class ViewController: UIViewController, ChartViewDelegate {
     
     func createDROutputFile(fileName: String) -> URL {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "mm-dd_HH:mm"
+        dateFormatter.dateFormat = "mm-dd_HH-mm"
         let fileName = "DR_\(dateFormatter.string(from: Date()))_\(fileName)"
         let fileUrl = documentsUrl.appendingPathComponent(fileName)
 
