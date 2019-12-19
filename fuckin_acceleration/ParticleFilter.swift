@@ -104,7 +104,7 @@ class ParticleFilter {
     private func system_noise() {
         let ss = sqrt(self.sigma)
         for i in self.xResampled.indices {
-            for j in self.xResampled[0].indices {
+            for j in self.xResampled[i].indices {
                 let noise = self.alpha + ParticleFilter.box_muller() * ss
                 self.xResampled[i][j] += noise
             }

@@ -56,13 +56,14 @@ class ViewController: UIViewController, ChartViewDelegate {
         yAxis.labelPosition = .outsideChart
         yAxis.axisLineColor = .white
         
-        yAxis.axisMaximum = 0.0
-        yAxis.axisMinimum = -2.0
+        yAxis.axisMaximum = 1.0
+        yAxis.axisMinimum = -1.0
         
         self.lineChartView.rightAxis.enabled = false
         self.lineChartView.legend.enabled = false
         
         self.stopButton.isHidden = true
+        self.androidSwitch.isOn = false
     }
     
     
@@ -119,7 +120,15 @@ class ViewController: UIViewController, ChartViewDelegate {
                 let rm = deviceMotion.attitude.rotationMatrix
                 let rotationMatrix = rm.toArray()
                 // ユーザー加速度の取得 [G]
-                let userAcc = deviceMotion.userAcceleration
+                let userAcc = deviceMotion.userAcceleration.inverse()
+                self.xAcc.append(userAcc.x)
+                if self.xAcc.count == 100 {
+                    let temp = self.xAcc
+                    DispatchQueue.main.async {
+                        self.lineChartView.data = self.generateLineData(vals: temp)
+                    }
+                    self.xAcc.removeAll()
+                }
                 // 重力加速度の取得 [G]
                 let gravity = deviceMotion.gravity
                 // バイアスを削除したジャイロの取得 [rad/s]
@@ -282,7 +291,7 @@ class ViewController: UIViewController, ChartViewDelegate {
     
     func createDROutputFile(fileName: String) -> URL {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "mm-dd_HH-mm"
+        dateFormatter.dateFormat = "MM-dd_HH-mm"
         let fileName = "DR_\(dateFormatter.string(from: Date()))_\(fileName)"
         let fileUrl = documentsUrl.appendingPathComponent(fileName)
 
@@ -341,5 +350,33 @@ extension CMRotationMatrix {
         self.m31 = input[7]
         self.m32 = input[8]
         self.m33 = input[9]
+    }
+}
+
+extension CMAcceleration {
+    func inverse() -> CMAcceleration {
+        var inverseAcc = self
+        inverseAcc.x = -inverseAcc.x
+        inverseAcc.y = -inverseAcc.y
+        inverseAcc.z = -inverseAcc.z
+        return inverseAcc
+    }
+}
+
+
+class DeadReckoning {
+    var x: Double
+    var y: Double
+    var prevInput: [Double]!
+    
+    init() {
+        self.x = 0.0
+        self.y = 0.0
+    }
+    
+    public func update(PFoutput: [Double], durTime: Double) -> (x: Double, y: Double) {
+        self.x += PFoutput[0] * durTime
+        self.y += PFoutput[1] * durTime
+        return (self.x, self.y)
     }
 }
